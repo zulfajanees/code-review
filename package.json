@@ -1,0 +1,11 @@
+{
+  "name": "ai-code-review-web-app",
+  "version": "1.0.0",
+  "description": "Web application for AI-assisted code review",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}

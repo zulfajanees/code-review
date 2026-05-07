@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - CodeSense AI</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-auth-page="dashboard">
+    <header class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-left">
+          <div class="brand" style="gap: 10px;">
+            <div class="brand-mark" style="width: 32px; height: 32px;"></div>
+            <div>CodeSense AI</div>
+          </div>
+        </div>
+
+        <div class="navbar-right">
+          <div class="chip" title="Current user">
+            <span style="color: var(--faint); font-weight: 700;">User:</span>
+            <span id="navbar-username">—</span>
+          </div>
+
+          <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode">
+            <span id="theme-icon">🌙</span>
+          </button>
+
+          <button id="logout-btn" class="btn-ghost" type="button" style="border-radius: 999px;">
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="dashboard-title">
+        <div>
+          <h1>AI Code Review & Analysis</h1>
+          <p>Paste code, choose a language, and get structured review, explanations, and issue cards.</p>
+        </div>
+      </section>
+
+      <section class="grid">
+        <!-- Code Input Panel -->
+        <section class="panel panel--primary">
+          <div class="panel-header">
+            <h2>Code Input</h2>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span class="chip" style="font-size:0.82rem;">Gemini via fetch</span>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="field-stack">
+              <div class="field">
+                <div class="label">Language</div>
+                <select id="language-select">
+                  <option value="auto">Auto-detect</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="csharp">C#</option>
+                  <option value="cpp">C++</option>
+                  <option value="go">Go</option>
+                  <option value="rust">Rust</option>
+                  <option value="php">PHP</option>
+                  <option value="ruby">Ruby</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <div class="label">Focus (optional)</div>
+                <input id="focus-input" type="text" placeholder="e.g. security, performance, maintainability" />
+              </div>
+
+              <div class="field">
+                <div class="label">Code</div>
+                <textarea
+                  id="code-input"
+                  class="code-textarea"
+                  spellcheck="false"
+                  rows="12"
+                  placeholder="Paste your code here..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <div class="hint">API key is stored in <code style="font-family:inherit;">script.js</code> for demo purposes.</div>
+            <button id="analyze-button" class="btn btn-primary" type="button">
+              <span id="analyze-spinner" class="spinner hidden" aria-hidden="true"></span>
+              <span id="analyze-label">Run AI Review</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Score Panel -->
+        <section class="panel panel--secondary">
+          <div class="panel-header">
+            <h2>Quality Score</h2>
+          </div>
+          <div class="score-wrap">
+            <div class="score-circle">
+              <div class="score-value" id="score-value">—</div>
+            </div>
+            <div class="score-meta">
+              <div id="score-label" class="score-label">Awaiting analysis</div>
+              <div id="score-subtext" class="score-sub">Run a review to see scores.</div>
+            </div>
+
+            <div class="score-bars">
+              <div class="bar">
+                <div class="bar-head">
+                  <span>Correctness</span>
+                  <span id="score-correctness-label">—</span>
+                </div>
+                <div class="bar-track">
+                  <div id="score-correctness" class="bar-fill"></div>
+                </div>
+              </div>
+
+              <div class="bar">
+                <div class="bar-head">
+                  <span>Security</span>
+                  <span id="score-security-label">—</span>
+                </div>
+                <div class="bar-track">
+                  <div id="score-security" class="bar-fill"></div>
+                </div>
+              </div>
+
+              <div class="bar">
+                <div class="bar-head">
+                  <span>Maintainability</span>
+                  <span id="score-maintainability-label">—</span>
+                </div>
+                <div class="bar-track">
+                  <div id="score-maintainability" class="bar-fill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AI Review Panel -->
+        <section class="panel panel--stretch">
+          <div class="panel-header">
+            <h2>AI Review</h2>
+            <button id="copy-review" class="btn-ghost" type="button">Copy Review</button>
+          </div>
+          <div class="panel-body">
+            <div id="review-output" class="output-box">
+              <p class="placeholder">Run a review to see AI feedback here.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Explanation Panel -->
+        <section class="panel panel--stretch">
+          <div class="panel-header">
+            <h2>AI Explanation & Insights</h2>
+          </div>
+          <div class="panel-body">
+            <div id="explanation-output" class="output-box">
+              <p class="placeholder">Detailed explanations and reasoning will appear here after running a review.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Issues Panel -->
+        <section class="panel panel--stretch">
+          <div class="panel-header">
+            <h2>Issues & Warnings</h2>
+          </div>
+          <div class="panel-body">
+            <div id="issues-container" class="issues-grid">
+              <div class="placeholder">No issues yet. Run a review to see potential problems.</div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./auth.js"></script>
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>
+

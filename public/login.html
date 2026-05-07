@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login - CodeSense AI</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-auth-page="login">
+    <div class="page">
+      <div class="shell auth-grid">
+        <section class="auth-left card">
+          <div style="position: relative; z-index: 1; padding: 10px 0;">
+            <div class="brand">
+              <div class="brand-mark"></div>
+              <div>CodeSense AI</div>
+            </div>
+            <h1 class="h1" style="margin-top: 14px;">
+              Welcome back
+            </h1>
+            <p class="subtle">
+              Sign in to get AI-powered code review, explanations, and actionable
+              improvements.
+            </p>
+
+            <div style="margin-top: 18px; padding-right: 10px;">
+              <div class="divider">Gemini-ready dashboard</div>
+              <div style="display:grid; gap:10px;">
+                <div class="chip" style="width: fit-content;">
+                  Glass UI • Responsive • Fast
+                </div>
+                <div class="chip" style="width: fit-content;">
+                  Quality score • Issues • Copy
+                </div>
+                <div class="chip" style="width: fit-content;">
+                  Dark mode toggle
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="auth-right card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 class="auth-title">Login</h2>
+
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode">
+                <span id="theme-icon">🌙</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="login-form" class="form" novalidate>
+            <div class="field">
+              <div class="label">Email</div>
+              <input id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" />
+            </div>
+
+            <div class="field">
+              <div class="label">Password</div>
+              <div class="control">
+                <input
+                  id="login-password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Enter your password"
+                />
+                <button id="toggle-login-password" class="password-toggle" type="button">Show</button>
+              </div>
+            </div>
+
+            <div class="row">
+              <label class="checkbox">
+                <input id="remember-me" type="checkbox" checked />
+                Remember me
+              </label>
+              <a id="forgot-password-btn" class="link" href="#">Forgot password?</a>
+            </div>
+
+            <p id="login-error" class="error" aria-live="polite"></p>
+
+            <button id="login-submit" class="btn btn-primary" type="submit">
+              <span id="login-spinner" class="spinner hidden" aria-hidden="true"></span>
+              <span>Login</span>
+            </button>
+
+            <div class="divider">or continue with</div>
+
+            <button class="btn-social" data-social-provider="google" type="button">
+              <span style="font-size:1.05rem;">G</span>
+              Continue with Google
+            </button>
+            <button class="btn-social" data-social-provider="github" type="button">
+              <span style="font-size:1.05rem;">GH</span>
+              Continue with GitHub
+            </button>
+
+            <div style="margin-top: 2px; color: var(--muted); font-size: 0.92rem;">
+              Don&apos;t have an account?
+              <a class="link" href="./signup.html">Create one</a>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <!-- Forgot password modal (demo) -->
+    <div id="forgot-modal" class="modal-overlay" role="dialog" aria-modal="true">
+      <div class="modal card">
+        <h3>Forgot password</h3>
+        <p>
+          This is a frontend-only demo. Password reset isn&apos;t available. You can sign up again with a new
+          email or use the demo social buttons.
+        </p>
+        <button class="btn btn-primary" type="button" data-modal-close>Close</button>
+      </div>
+    </div>
+
+    <script type="module" src="./auth.js"></script>
+  </body>
+</html>
+

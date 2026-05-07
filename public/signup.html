@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign up - CodeSense AI</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-auth-page="signup">
+    <div class="page">
+      <div class="shell auth-grid">
+        <section class="auth-left card">
+          <div style="position: relative; z-index: 1; padding: 10px 0;">
+            <div class="brand">
+              <div class="brand-mark"></div>
+              <div>CodeSense AI</div>
+            </div>
+            <h1 class="h1" style="margin-top: 14px;">
+              Create your account
+            </h1>
+            <p class="subtle">
+              Get structured AI code review with quality scoring and warning cards.
+            </p>
+
+            <div style="margin-top: 18px;">
+              <div class="divider">Safe demo auth (no backend)</div>
+              <div style="display:grid; gap:10px; margin-right:10px;">
+                <div class="chip" style="width: fit-content;">Hashed passwords locally</div>
+                <div class="chip" style="width: fit-content;">Session stored in browser</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="auth-right card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <h2 class="auth-title">Sign up</h2>
+            <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode">
+              <span id="theme-icon">🌙</span>
+            </button>
+          </div>
+
+          <form id="signup-form" class="form" novalidate>
+            <div class="field">
+              <div class="label">Username</div>
+              <input id="signup-username" type="text" autocomplete="username" placeholder="e.g. alex-dev" />
+            </div>
+
+            <div class="field">
+              <div class="label">Email</div>
+              <input id="signup-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" />
+            </div>
+
+            <div class="field strength">
+              <div class="label">Password</div>
+              <div class="control">
+                <input id="signup-password" type="password" autocomplete="new-password" placeholder="Create a password" />
+                <button id="toggle-signup-password" class="password-toggle" type="button">Show</button>
+              </div>
+              <div class="strength-meter" aria-hidden="true">
+                <div id="strength-fill"></div>
+              </div>
+              <div id="strength-text" class="strength-text">Weak</div>
+            </div>
+
+            <div class="field">
+              <div class="label">Confirm password</div>
+              <div class="control">
+                <input id="signup-confirm" type="password" autocomplete="new-password" placeholder="Repeat your password" />
+                <button id="toggle-signup-confirm" class="password-toggle" type="button">Show</button>
+              </div>
+            </div>
+
+            <p id="signup-error" class="error" aria-live="polite"></p>
+
+            <button id="signup-submit" class="btn btn-primary" type="submit">
+              <span id="signup-spinner" class="spinner hidden" aria-hidden="true"></span>
+              <span>Create account</span>
+            </button>
+
+            <div class="divider">or continue with</div>
+
+            <button class="btn-social" data-social-provider="google" type="button">
+              <span style="font-size:1.05rem;">G</span>
+              Continue with Google
+            </button>
+            <button class="btn-social" data-social-provider="github" type="button">
+              <span style="font-size:1.05rem;">GH</span>
+              Continue with GitHub
+            </button>
+
+            <div style="margin-top: 2px; color: var(--muted); font-size: 0.92rem;">
+              Already have an account?
+              <a class="link" href="./login.html">Log in</a>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <!-- Signup success popup -->
+    <div id="signup-success-modal" class="modal-overlay" role="dialog" aria-modal="true">
+      <div class="modal card">
+        <h3>Account created</h3>
+        <p>Success! Redirecting to your dashboard…</p>
+        <button class="btn btn-primary" type="button" data-modal-close>Continue</button>
+      </div>
+    </div>
+
+    <script type="module" src="./auth.js"></script>
+  </body>
+</html>
+

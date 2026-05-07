@@ -1,0 +1,57 @@
+# AI Code Review Web App
+
+A simple web app that lets you paste code and receive AI-powered review feedback.
+
+## Features
+
+- Paste code and request focused reviews (security, performance, readability, etc.)
+- Add optional author notes and language hints
+- Receive structured markdown feedback with suggested improvements
+- Lightweight stack: Express backend + static frontend
+
+## Setup
+
+1. Create a `.env` file from `.env.example`:
+
+   ```bash
+   copy .env.example .env
+   ```
+
+2. Set your API key in `.env`:
+
+   ```env
+   OPENAI_API_KEY=your_api_key_here
+   OPENAI_MODEL=gpt-4o-mini
+   PORT=3000
+   ```
+
+3. Run the app:
+
+   ```bash
+   node server.js
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000).
+
+## API
+
+### `POST /api/review`
+
+Request body:
+
+```json
+{
+  "code": "function add(a,b){return a+b}",
+  "language": "JavaScript",
+  "focus": "security, readability",
+  "notes": "This is from a utility module."
+}
+```
+
+Response:
+
+```json
+{
+  "review": "## Overview\n..."
+}
+```

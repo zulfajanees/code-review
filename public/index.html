@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeSense AI</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <div class="shell" style="text-align:center;">
+        <div class="brand" style="justify-content:center;">
+          <div class="brand-mark"></div>
+          <div>CodeSense AI</div>
+        </div>
+        <h1 class="h1" style="margin-top: 14px;">Loading…</h1>
+        <p class="subtle">Redirecting you to the right page.</p>
+      </div>
+    </div>
+
+    <script type="module">
+      import { getSession } from "./auth.js";
+      const session = getSession();
+      window.location.href = session ? "./dashboard.html" : "./login.html";
+    </script>
+  </body>
+</html>
