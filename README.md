@@ -54,4 +54,3 @@ Response:
 {
   "review": "## Overview\n..."
 }
-```
