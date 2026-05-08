@@ -1,4 +1,9 @@
-const MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const configuredModel = (process.env.GEMINI_MODEL || "").trim();
+const modelCandidates = [
+  configuredModel || "gemini-1.5-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-2.0-flash"
+].filter((value, index, arr) => value && arr.indexOf(value) === index);
 
 function buildPrompt({ code, language, notes, focus }) {
   return [
@@ -73,47 +78,58 @@ async function callGemini(prompt) {
     throw new Error("GEMINI_API_KEY is not set.");
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: "You produce high-quality code review feedback." }]
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }]
+  let lastError = null;
+
+  for (const model of modelCandidates) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: "You produce high-quality code review feedback." }]
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2
         }
-      ],
-      generationConfig: {
-        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      const notFoundModel = response.status === 404 && details.includes('"code": 404');
+      if (notFoundModel) {
+        lastError = new Error(`Gemini model ${model} not found.`);
+        continue;
       }
-    })
-  });
-
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${details}`);
-  }
-
-  const data = await response.json();
-  const content =
-    data?.candidates?.[0]?.content?.parts
-      ?.map((part) => part?.text)
-      .filter(Boolean)
-      .join("\n")
-      .trim() || "";
-
-  if (!content) {
-    const blockedReason = data?.promptFeedback?.blockReason;
-    if (blockedReason) {
-      throw new Error(`Gemini response blocked: ${blockedReason}`);
+      throw new Error(`Gemini API error (${response.status}): ${details}`);
     }
-    throw new Error("No content returned from model.");
+
+    const data = await response.json();
+    const content =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((part) => part?.text)
+        .filter(Boolean)
+        .join("\n")
+        .trim() || "";
+
+    if (!content) {
+      const blockedReason = data?.promptFeedback?.blockReason;
+      if (blockedReason) {
+        throw new Error(`Gemini response blocked: ${blockedReason}`);
+      }
+      throw new Error("No content returned from model.");
+    }
+    return content;
   }
-  return content;
+
+  throw lastError || new Error("No compatible Gemini model available.");
 }
 
 function parseBody(req) {
