@@ -11,8 +11,12 @@ const publicDir = path.join(__dirname, "public");
 loadEnv(path.join(__dirname, ".env"));
 
 const port = Number(process.env.PORT) || 3000;
-const primaryModel = process.env.GEMINI_MODEL || "gemini-2.0-flash-lite";
-const fallbackModel = process.env.GEMINI_FALLBACK_MODEL || "gemini-2.0-flash-lite";
+const primaryModel = process.env.GEMINI_MODEL || "gemini-1.5-flash-8b";
+const fallbackModels = [
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-2.0-flash"
+];
 const apiTimeoutMs = Number(process.env.API_TIMEOUT_MS) || 30000;
 
 // ── API KEY ROTATION ──────────────────────────────────────────────
@@ -175,6 +179,8 @@ async function callGeminiWithKey(prompt, model, apiKey) {
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    console.log(`Calling Gemini API: ${endpoint} with model ${model}`);
+
     const response = await fetch(endpoint, {
       signal: controller.signal,
       method: "POST",
@@ -190,12 +196,16 @@ async function callGeminiWithKey(prompt, model, apiKey) {
 
     if (!response.ok) {
       const details = await response.text();
+      console.error(`Gemini API error (${response.status}): ${details.slice(0, 500)}`);
+
       const error = new Error(`Gemini API error (${response.status}): ${details.slice(0, 300)}`);
       error.status = response.status;
       throw error;
     }
 
     const data = await response.json();
+    console.log(`Gemini API response received for model ${model}`);
+
     const content =
       data?.candidates?.[0]?.content?.parts
         ?.map((part) => part?.text)
@@ -205,17 +215,29 @@ async function callGeminiWithKey(prompt, model, apiKey) {
 
     if (!content) {
       const blockedReason = data?.promptFeedback?.blockReason;
-      if (blockedReason) throw new Error(`Gemini response blocked: ${blockedReason}`);
+      if (blockedReason) {
+        console.error(`Gemini response blocked: ${blockedReason}`);
+        throw new Error(`Gemini response blocked: ${blockedReason}`);
+      }
+      console.error("No content returned from Gemini model");
       throw new Error("No content returned from model.");
     }
+
+    console.log(`Successfully received content from model ${model}, length: ${content.length}`);
     return content;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error(`Gemini API call timed out after ${apiTimeoutMs}ms for model ${model}`);
+      throw new Error(`API call timed out after ${apiTimeoutMs}ms`);
+    }
+    throw error;
   } finally {
     clearTimeout(timeout);
   }
 }
 
 async function callGemini(prompt) {
-  const models = [primaryModel, fallbackModel];
+  const models = [primaryModel, ...fallbackModels];
   const errors = [];
 
   for (const model of models) {
@@ -246,7 +268,14 @@ async function callGemini(prompt) {
 }
 
 function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
+  // Add CORS headers for Vercel deployment
+  const headers = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  };
+  res.writeHead(statusCode, headers);
   res.end(JSON.stringify(payload));
 }
 
@@ -262,6 +291,18 @@ function contentTypeFor(filePath) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host}`);
+
+    // Handle CORS preflight requests
+    if (req.method === "OPTIONS") {
+      res.writeHead(200, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "86400"
+      });
+      res.end();
+      return;
+    }
 
     if (req.method === "POST" && url.pathname === "/api/review") {
       let body = "";
