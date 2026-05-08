@@ -11,7 +11,7 @@ const publicDir = path.join(__dirname, "public");
 loadEnv(path.join(__dirname, ".env"));
 
 const port = Number(process.env.PORT) || 3000;
-const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 function loadEnv(envPath) {
   try {
@@ -58,42 +58,52 @@ function buildPrompt({ code, language, notes, focus }) {
   ].join("\n");
 }
 
-async function callOpenAI(prompt) {
-  const apiKey = process.env.OPENAI_API_KEY;
+async function callGemini(prompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set.");
+    throw new Error("GEMINI_API_KEY is not set.");
   }
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      messages: [
-        {
-          role: "system",
-          content: "You produce high-quality code review feedback."
-        },
+      systemInstruction: {
+        parts: [{ text: "You produce high-quality code review feedback." }]
+      },
+      contents: [
         {
           role: "user",
-          content: prompt
+          parts: [{ text: prompt }]
         }
-      ]
+      ],
+      generationConfig: {
+        temperature: 0.2
+      }
     })
   });
 
   if (!response.ok) {
     const details = await response.text();
-    throw new Error(`OpenAI API error (${response.status}): ${details}`);
+    throw new Error(`Gemini API error (${response.status}): ${details}`);
   }
 
   const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content;
+  const content =
+    data?.candidates?.[0]?.content?.parts
+      ?.map((part) => part?.text)
+      .filter(Boolean)
+      .join("\n")
+      .trim() || "";
+
   if (!content) {
+    const blockedReason = data?.promptFeedback?.blockReason;
+    if (blockedReason) {
+      throw new Error(`Gemini response blocked: ${blockedReason}`);
+    }
     throw new Error("No content returned from model.");
   }
   return content;
@@ -138,7 +148,7 @@ const server = http.createServer(async (req, res) => {
           }
 
           const prompt = buildPrompt({ code, language, notes, focus });
-          const review = await callOpenAI(prompt);
+          const review = await callGemini(prompt);
           sendJson(res, 200, { review });
         } catch (error) {
           sendJson(res, 500, {

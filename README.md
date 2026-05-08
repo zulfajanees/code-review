@@ -7,7 +7,7 @@ A simple web app that lets you paste code and receive AI-powered review feedback
 - Paste code and request focused reviews (security, performance, readability, etc.)
 - Add optional author notes and language hints
 - Receive structured markdown feedback with suggested improvements
-- Lightweight stack: Express backend + static frontend
+- Lightweight stack: Node.js backend + static frontend
 
 ## Setup
 
@@ -17,11 +17,11 @@ A simple web app that lets you paste code and receive AI-powered review feedback
    copy .env.example .env
    ```
 
-2. Set your API key in `.env`:
+2. Set your Gemini API key in `.env`:
 
    ```env
-   OPENAI_API_KEY=your_api_key_here
-   OPENAI_MODEL=gpt-4o-mini
+   GEMINI_API_KEY=your_api_key_here
+   GEMINI_MODEL=gemini-1.5-flash
    PORT=3000
    ```
 
