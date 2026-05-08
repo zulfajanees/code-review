@@ -11,13 +11,18 @@ const publicDir = path.join(__dirname, "public");
 loadEnv(path.join(__dirname, ".env"));
 
 const port = Number(process.env.PORT) || 3000;
-const primaryModel = process.env.GEMINI_MODEL || "gemini-1.5-flash-8b";
+const primaryModel = process.env.GEMINI_MODEL || "gemini-2.0-flash-lite";
 const fallbackModels = [
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-latest",
-  "gemini-2.0-flash"
+  "gemini-2.0-flash",
+  "gemini-pro",
+  "gemini-1.5-pro"
 ];
 const apiTimeoutMs = Number(process.env.API_TIMEOUT_MS) || 30000;
+
+// Validate API key is configured
+if (!process.env.GEMINI_API_KEY) {
+  console.warn("⚠️  WARNING: GEMINI_API_KEY is not set. Set it in .env or Vercel environment variables.");
+}
 
 // ── API KEY ROTATION ──────────────────────────────────────────────
 // Add all your Gemini API keys here (one per Gmail account)
@@ -26,7 +31,11 @@ function getApiKeys() {
   if (process.env.GEMINI_API_KEY) keys.push(process.env.GEMINI_API_KEY);
   if (process.env.GEMINI_API_KEY_2) keys.push(process.env.GEMINI_API_KEY_2);
   if (process.env.GEMINI_API_KEY_3) keys.push(process.env.GEMINI_API_KEY_3);
-  if (keys.length === 0) throw new Error("No GEMINI_API_KEY configured.");
+  if (keys.length === 0) {
+    const msg = "No GEMINI_API_KEY configured. Please set GEMINI_API_KEY in your .env file or Vercel environment variables.";
+    console.error("❌ " + msg);
+    throw new Error(msg);
+  }
   return keys;
 }
 

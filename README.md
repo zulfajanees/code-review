@@ -21,7 +21,7 @@ A simple web app that lets you paste code and receive AI-powered review feedback
 
    ```env
    GEMINI_API_KEY=your_api_key_here
-   GEMINI_MODEL=gemini-1.5-flash-8b
+   GEMINI_MODEL=gemini-2.0-flash-lite
    PORT=3000
    ```
 
