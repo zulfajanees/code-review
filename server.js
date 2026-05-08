@@ -11,11 +11,11 @@ const publicDir = path.join(__dirname, "public");
 loadEnv(path.join(__dirname, ".env"));
 
 const port = Number(process.env.PORT) || 3000;
-const primaryModel = process.env.GEMINI_MODEL || "gemini-2.0-flash-lite";
+const primaryModel = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 const fallbackModels = [
-  "gemini-2.0-flash",
-  "gemini-pro",
-  "gemini-1.5-pro"
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-1.5-flash-8b"
 ];
 const apiTimeoutMs = Number(process.env.API_TIMEOUT_MS) || 30000;
 
@@ -188,7 +188,7 @@ async function callGeminiWithKey(prompt, model, apiKey) {
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    console.log(`Calling Gemini API: ${endpoint} with model ${model}`);
+    console.log(`Calling Gemini API: model=${model}`);
 
     const response = await fetch(endpoint, {
       signal: controller.signal,
@@ -196,9 +196,9 @@ async function callGeminiWithKey(prompt, model, apiKey) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         systemInstruction: {
-          parts: [{ text: "You produce high-quality code review feedback." }]
+          parts: [{ text: prompt }]
         },
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        contents: [{ role: "user", parts: [{ text: "Please review the code above and provide feedback in the specified JSON format." }] }],
         generationConfig: { temperature: 0.2 }
       })
     });
