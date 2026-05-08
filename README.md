@@ -25,6 +25,8 @@ A simple web app that lets you paste code and receive AI-powered review feedback
    PORT=3000
    ```
 
+   For Vercel deployment, set `GEMINI_API_KEY` and optional `GEMINI_MODEL` in Project Settings -> Environment Variables.
+
 3. Run the app:
 
    ```bash
@@ -52,5 +54,16 @@ Response:
 
 ```json
 {
-  "review": "## Overview\n..."
+  "review": {
+    "overview": "...",
+    "suggestions": "...",
+    "explanation": "...",
+    "score": 82,
+    "subscores": {
+      "correctness": 84,
+      "security": 78,
+      "maintainability": 85
+    },
+    "issues": []
+  }
 }

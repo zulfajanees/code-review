@@ -1,8 +1,5 @@
-// === Gemini integration (frontend-only) ===
-// Demo: put your API key here. This is not secure for production apps.
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
-const GEMINI_MODEL = "gemini-1.5-flash-latest";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// Reviews are generated via backend API to keep secrets off the client.
+const REVIEW_API_ENDPOINT = "/api/review";
 
 // === DOM ===
 const analyzeButton = document.getElementById("analyze-button");
@@ -202,79 +199,34 @@ function renderIssues(data) {
   }
 }
 
-async function callGemini({ code, language, focus }) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-    throw new Error("Set your Gemini API key in public/script.js (GEMINI_API_KEY).");
+async function callReviewApi({ code, language, focus }) {
+  const response = await fetch(REVIEW_API_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, language, focus }),
+  });
+
+  let payload = {};
+  try {
+    payload = await response.json();
+  } catch {
+    payload = {};
   }
-
-  const modelLang = language || "auto-detect";
-  const modelFocus = focus || "general review (correctness, security, performance, maintainability)";
-
-  const systemPrompt = `
-You are a senior staff engineer performing a code review and analysis.
-
-Return a STRICT JSON object ONLY. No markdown. No surrounding text.
-
-JSON schema:
-{
-  "overview": string,
-  "suggestions": string,
-  "explanation": string,
-  "score": number,
-  "subscores": {
-    "correctness": number,
-    "security": number,
-    "maintainability": number
-  },
-  "issues": [
-    {
-      "title": string,
-      "severity": "error" | "warning" | "info",
-      "location": string,
-      "message": string,
-      "recommendation": string
-    }
-  ]
-}
-
-Rules:
-- Prefer correctness, security, and clear improvements.
-- If there are no issues, return an empty issues array.
-`;
-
-  const userPrompt = `
-Language: ${modelLang}
-Focus: ${modelFocus}
-
-Code to review:
-\`\`\`
-${code}
-\`\`\`
-`;
-
-  const body = {
-    contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
-  };
-
-  const response = await fetch(
-    `${GEMINI_ENDPOINT}?key=${encodeURIComponent(GEMINI_API_KEY)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }
-  );
 
   if (!response.ok) {
-    const errorText = await response.text().catch(() => "");
-    throw new Error(`Gemini API error (${response.status}): ${errorText || response.statusText}`);
+    const message = payload?.error || `Request failed (${response.status}).`;
+    throw new Error(message);
   }
 
-  const result = await response.json();
-  const text = getCandidateText(result);
-  if (!text) throw new Error("No content returned from Gemini.");
+  if (payload?.review && typeof payload.review === "object") {
+    return payload.review;
+  }
 
-  return parseReviewJson(text);
+  if (typeof payload?.review === "string") {
+    return parseReviewJson(payload.review);
+  }
+
+  throw new Error("Invalid review response from server.");
 }
 
 async function runReview() {
@@ -293,7 +245,7 @@ async function runReview() {
   issuesContainer.innerHTML = '<div class="placeholder">Scanning for issues and warnings...</div>';
 
   try {
-    const reviewJson = await callGemini({ code, language, focus });
+    const reviewJson = await callReviewApi({ code, language, focus });
     renderScores(reviewJson);
     renderReviewAndExplanation(reviewJson);
     renderIssues(reviewJson);

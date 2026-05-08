@@ -34,18 +34,35 @@ function loadEnv(envPath) {
 
 function buildPrompt({ code, language, notes, focus }) {
   return [
-    "You are a senior staff engineer reviewing a pull request.",
-    "Return your response as markdown with these sections in order:",
-    "1) Overview",
-    "2) Critical Issues",
-    "3) Suggestions",
-    "4) Improved Example",
+    "You are a senior staff engineer performing a code review and analysis.",
+    "Return STRICT JSON only. No markdown, no code fences, no prose.",
+    "",
+    "JSON schema:",
+    "{",
+    '  "overview": string,',
+    '  "suggestions": string,',
+    '  "explanation": string,',
+    '  "score": number,',
+    '  "subscores": {',
+    '    "correctness": number,',
+    '    "security": number,',
+    '    "maintainability": number',
+    "  },",
+    '  "issues": [',
+    "    {",
+    '      "title": string,',
+    '      "severity": "error" | "warning" | "info",',
+    '      "location": string,',
+    '      "message": string,',
+    '      "recommendation": string',
+    "    }",
+    "  ]",
+    "}",
     "",
     "Rules:",
-    "- Be direct, practical, and specific.",
     "- Prioritize correctness, security, performance, and readability.",
-    "- If no critical issues exist, explicitly say that.",
-    "- For Improved Example, provide a concise revised snippet only.",
+    "- If no issues exist, return an empty issues array.",
+    "- Keep output concise and practical.",
     "",
     `Language: ${language || "Unknown"}`,
     `Focus Areas: ${focus || "General review"}`,
@@ -56,6 +73,26 @@ function buildPrompt({ code, language, notes, focus }) {
     code,
     "```"
   ].join("\n");
+}
+
+function stripJsonFences(text) {
+  return String(text || "")
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+}
+
+function extractFirstJsonObject(text) {
+  const cleaned = stripJsonFences(text);
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) return cleaned;
+  return cleaned.slice(start, end + 1);
+}
+
+function parseReviewJson(text) {
+  const candidate = extractFirstJsonObject(text);
+  return JSON.parse(candidate);
 }
 
 async function callGemini(prompt) {
@@ -148,7 +185,8 @@ const server = http.createServer(async (req, res) => {
           }
 
           const prompt = buildPrompt({ code, language, notes, focus });
-          const review = await callGemini(prompt);
+          const reviewText = await callGemini(prompt);
+          const review = parseReviewJson(reviewText);
           sendJson(res, 200, { review });
         } catch (error) {
           sendJson(res, 500, {
